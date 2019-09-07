@@ -25,10 +25,10 @@ ui <- fluidPage(
       # Select variable for x-axis ----------------------------------
       selectInput(inputId = "x", 
                   label = "X-axis:",
-                  choices = c("District" = "District", 
-                              "City" = "City", 
-                              "State" = "State", 
-                              "Model" = "Model"), 
+                  choices = c("District", 
+                              "City", 
+                              "State", 
+                              "Model"), 
                   selected = "Model"),
       
       # Show data table ---------------------------------------------
@@ -41,11 +41,6 @@ ui <- fluidPage(
       # Horizontal line for visual separation -----------------------
       hr(),
       
-      # Select which types of models to plot ------------------------
-      checkboxGroupInput(inputId = "selected_type",
-                         label = "Select model type(s):",
-                         choices = c("Closure", "Restart", "Transformation", "Turnaround"),
-                         selected = "Transformation"),
       
       # Select sample size ----------------------------------------------------
       numericInput(inputId = "n_samp", 
@@ -60,8 +55,10 @@ ui <- fluidPage(
       # Show boxplot ------------------------------------------------
       plotOutput("boxplot"),
       
+      plotOutput("barchart"),
+      
       # Show data table ---------------------------------------------
-      DT::dataTableOutput(outputId = "grants")
+      DT::dataTableOutput(outputId = "grantstable")
     )
   )
 )
@@ -75,30 +72,34 @@ server <- function(input, output, session) {
 
     updateNumericInput(session, 
                        inputId = "n_samp",
-                       value = min(50, nrow(grants())),
-                       max = nrow(grants())
+                       value = min(50, nrow(grants)),
+                       max = nrow(grants)
     )
   })
   
   # Create new df that is n_samp obs from selected type movies ------
   grants_sample <- reactive({ 
     req(input$n_samp) # ensure availablity of value before proceeding
-    sample_n(grants(), input$n_samp)
+    sample_n(grants, input$n_samp)
   })
-  
-  
+
   # Create boxplot object the plotOutput function is expecting --
 
   output$boxplot <- renderPlot({
-    boxplot(data = grants_sample(),
-            pch = 19)
+    ggplot(grants_sample(), aes(x=input$x, y=Award)) + 
+      geom_boxplot()
+  })
+  
+  output$barchart <- renderPlot({
+    ggplot(grants_sample(), aes(x=input$x, y=Award)) + 
+      geom_bar(stat="identity")
     
   })
 
   # Print data table if checked -------------------------------------
   output$grantstable <- DT::renderDataTable(
     if(input$show_data){
-      DT::datatable(data = grants_sample()[, 1:7], 
+      DT::datatable(data = grants_sample(), 
                     options = list(pageLength = 10), 
                     rownames = FALSE)
     }
