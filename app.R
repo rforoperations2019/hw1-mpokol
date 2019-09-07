@@ -34,8 +34,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
       # Input: Create a range for awarded money ------------------------------
       sliderInput(inputId = "Range", 
                   label = "Award Range ($) for Data Table:",
-                  min = 1, max = 1000,
-                  value = c(200,800)),
+                  min = 1, max = 10000,
+                  value = c(1000,6000)),
       
       # Input: Show data table -----------------------------------------------
       checkboxInput(inputId = "show_data",
